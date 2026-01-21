@@ -385,7 +385,9 @@
 
         function updateMoveHistory() {
             const historyElement = document.getElementById('moveHistory');
-            const movesHTML = moveHistory.slice(-10).reverse().map((move, index) => 
+            const recentMoves = moveHistory.slice(-10);
+            const startIndex = moveHistory.length - recentMoves.length + 1;
+            const movesHTML = recentMoves.reverse().map((move, index) => 
                 `<p>${moveHistory.length - index}. ${move}</p>`
             ).join('');
             historyElement.innerHTML = '<h3>Move History</h3>' + movesHTML;
@@ -411,7 +413,7 @@
         function isKingInCheck() {
             // Find the current player's king
             const kingSymbol = currentTurn === 'white' ? 'K' : 'k';
-            let kingRow, kingCol;
+            let kingRow = -1, kingCol = -1;
             
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
@@ -421,10 +423,14 @@
                         break;
                     }
                 }
+                if (kingRow !== -1) break;
             }
             
+            // If king is not found, return false (shouldn't happen in normal game)
+            if (kingRow === -1) return false;
+            
             // Check if any opponent piece can attack the king
-            const opponentTurn = currentTurn;
+            const originalTurn = currentTurn;
             currentTurn = currentTurn === 'white' ? 'black' : 'white';
             
             for (let row = 0; row < 8; row++) {
@@ -432,14 +438,14 @@
                     const piece = board[row][col];
                     if (piece && isCurrentPlayerPiece(piece)) {
                         if (isValidMove(row, col, kingRow, kingCol)) {
-                            currentTurn = opponentTurn;
+                            currentTurn = originalTurn;
                             return true;
                         }
                     }
                 }
             }
             
-            currentTurn = opponentTurn;
+            currentTurn = originalTurn;
             return false;
         }
 
